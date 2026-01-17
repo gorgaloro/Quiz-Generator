@@ -1,8 +1,10 @@
 // Quiz State
 let quizData = [];
+let allQuestions = []; // Store all parsed questions
 let currentQuestionIndex = 0;
 let userAnswers = [];
 let score = 0;
+let currentFile = null; // Store the current file for regeneration
 
 // DOM Elements
 const uploadSection = document.getElementById('upload-section');
@@ -39,6 +41,7 @@ function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
+    currentFile = file; // Store for regeneration
     fileNameDisplay.textContent = `Selected: ${file.name}`;
 
     const reader = new FileReader();
@@ -52,7 +55,7 @@ function handleFileUpload(event) {
 // Parse CSV Content
 function parseCSV(csvContent) {
     const lines = csvContent.trim().split('\n');
-    quizData = [];
+    allQuestions = [];
 
     // Skip header if it exists (check if first line contains 'question')
     const startIndex = lines[0].toLowerCase().includes('question') ? 1 : 0;
@@ -64,29 +67,58 @@ function parseCSV(csvContent) {
         // Parse CSV line (handling quoted fields)
         const fields = parseCSVLine(line);
 
-        if (fields.length >= 2) {
+        if (fields.length >= 4) {
             const question = fields[0].trim();
             const correctAnswer = fields[1].trim();
-            const options = fields.slice(1).map(opt => opt.trim()).filter(opt => opt);
+            const enrichedChoices = fields[3].trim(); // Column D contains all answer choices
 
-            // Shuffle options for multiple choice
-            const shuffledOptions = shuffleArray([...options]);
+            // Parse the enriched choices to extract individual options
+            const options = parseEnrichedChoices(enrichedChoices);
 
-            quizData.push({
-                question: question,
-                correctAnswer: correctAnswer,
-                options: shuffledOptions,
-                userAnswer: null,
-                isCorrect: null
-            });
+            if (options.length > 0) {
+                allQuestions.push({
+                    question: question,
+                    correctAnswer: correctAnswer,
+                    options: options,
+                    userAnswer: null,
+                    isCorrect: null
+                });
+            }
         }
     }
 
-    if (quizData.length > 0) {
-        initializeQuiz();
+    if (allQuestions.length > 0) {
+        showQuestionLimitSelector();
     } else {
         alert('No valid questions found in the CSV file. Please check the format.');
     }
+}
+
+// Parse enriched answer choices (handles formats like "A) option1 B) option2" or line-separated)
+function parseEnrichedChoices(enrichedText) {
+    const options = [];
+
+    // Try splitting by common patterns: A), B), C), D), etc.
+    const pattern = /[A-Z]\)\s*/g;
+    const parts = enrichedText.split(pattern).filter(part => part.trim());
+
+    if (parts.length > 1) {
+        // Successfully split by letter patterns
+        return parts.map(opt => opt.trim()).filter(opt => opt);
+    }
+
+    // Try splitting by newlines
+    const lineOptions = enrichedText.split(/\n+/).map(opt => {
+        // Remove leading patterns like "A) ", "B) ", etc.
+        return opt.replace(/^[A-Z]\)\s*/, '').trim();
+    }).filter(opt => opt);
+
+    if (lineOptions.length > 1) {
+        return lineOptions;
+    }
+
+    // Fallback: return as single option if no pattern matched
+    return [enrichedText.trim()];
 }
 
 // Parse a single CSV line (handles quotes and commas)
@@ -120,6 +152,67 @@ function shuffleArray(array) {
         [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
     }
     return newArray;
+}
+
+// Show question limit selector
+function showQuestionLimitSelector() {
+    const totalAvailable = allQuestions.length;
+
+    // Create selector HTML
+    const selectorHTML = `
+        <div class="question-limit-selector">
+            <h3>Quiz loaded! ${totalAvailable} questions available.</h3>
+            <p>How many questions would you like in your quiz?</p>
+            <div class="limit-options">
+                <button class="limit-btn" onclick="generateQuiz(10)">10 Questions</button>
+                <button class="limit-btn" onclick="generateQuiz(25)">25 Questions</button>
+                <button class="limit-btn" onclick="generateQuiz(50)">50 Questions</button>
+                <button class="limit-btn" onclick="generateQuiz(${totalAvailable})">All ${totalAvailable} Questions</button>
+                <div class="custom-limit">
+                    <input type="number" id="custom-limit" min="1" max="${totalAvailable}" placeholder="Custom">
+                    <button class="limit-btn" onclick="generateCustomQuiz()">Start Custom</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    uploadSection.innerHTML += selectorHTML;
+}
+
+// Generate quiz with specified number of questions
+function generateQuiz(numQuestions) {
+    const limit = Math.min(numQuestions, allQuestions.length);
+
+    // Randomly select questions
+    const shuffledAll = shuffleArray([...allQuestions]);
+    quizData = shuffledAll.slice(0, limit);
+
+    // Shuffle options for each question
+    quizData.forEach(question => {
+        question.options = shuffleArray(question.options);
+        question.userAnswer = null;
+        question.isCorrect = null;
+    });
+
+    initializeQuiz();
+}
+
+// Generate quiz with custom number
+function generateCustomQuiz() {
+    const customInput = document.getElementById('custom-limit');
+    const num = parseInt(customInput.value);
+
+    if (isNaN(num) || num < 1) {
+        alert('Please enter a valid number');
+        return;
+    }
+
+    if (num > allQuestions.length) {
+        alert(`Only ${allQuestions.length} questions available. Starting quiz with all questions.`);
+        generateQuiz(allQuestions.length);
+    } else {
+        generateQuiz(num);
+    }
 }
 
 // Initialize Quiz
@@ -314,7 +407,7 @@ function reviewAnswers() {
     showQuestion();
 }
 
-// Restart Quiz
+// Restart Quiz (with same questions)
 function restartQuiz() {
     // Reset all answers
     quizData.forEach(question => {
@@ -338,15 +431,51 @@ function restartQuiz() {
     showQuestion();
 }
 
-// Load New Quiz
-function loadNewQuiz() {
-    quizData = [];
-    currentQuestionIndex = 0;
-    score = 0;
+// Generate new quiz from same CSV (different random questions)
+function generateNewQuizFromSame() {
+    if (allQuestions.length === 0) {
+        alert('No questions available. Please upload a CSV file first.');
+        return;
+    }
 
     resultsSection.classList.add('hidden');
+    quizSection.classList.add('hidden');
     uploadSection.classList.remove('hidden');
 
-    csvFileInput.value = '';
-    fileNameDisplay.textContent = '';
+    // Reset the upload section to show the question selector
+    const uploadArea = uploadSection.querySelector('.upload-area');
+    if (uploadArea) {
+        uploadArea.style.display = 'none';
+    }
+
+    showQuestionLimitSelector();
+}
+
+// Load completely new CSV file
+function loadNewQuiz() {
+    quizData = [];
+    allQuestions = [];
+    currentQuestionIndex = 0;
+    score = 0;
+    currentFile = null;
+
+    resultsSection.classList.add('hidden');
+    quizSection.classList.add('hidden');
+    uploadSection.classList.remove('hidden');
+
+    // Reset upload section
+    uploadSection.innerHTML = `
+        <div class="upload-area">
+            <div class="upload-icon">📁</div>
+            <h2>Upload Your Quiz CSV</h2>
+            <p>CSV format: Question, Answer, Choices, Enriched Answer Choices</p>
+            <input type="file" id="csv-file" accept=".csv" />
+            <label for="csv-file" class="upload-btn">Choose File</label>
+            <p class="file-name" id="file-name"></p>
+        </div>
+    `;
+
+    // Re-attach event listener
+    const newFileInput = document.getElementById('csv-file');
+    newFileInput.addEventListener('change', handleFileUpload);
 }

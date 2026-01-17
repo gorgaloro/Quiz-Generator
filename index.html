@@ -76,8 +76,11 @@
                         <span class="stat-value" id="accuracy">0%</span>
                     </div>
                 </div>
-                <button id="review-btn" class="btn btn-primary">Review Answers</button>
-                <button id="new-quiz-btn" class="btn btn-secondary">Upload New Quiz</button>
+                <div class="results-actions">
+                    <button id="review-btn" class="btn btn-primary">Review Answers</button>
+                    <button id="generate-new-btn" class="btn btn-success" onclick="generateNewQuizFromSame()">🔄 Generate New Quiz</button>
+                    <button id="new-quiz-btn" class="btn btn-secondary">Upload Different CSV</button>
+                </div>
             </div>
         </div>
     </div>
