@@ -426,3 +426,91 @@ header h1 {
         font-size: 2.5rem;
     }
 }
+
+/* Question Limit Selector */
+.question-limit-selector {
+    text-align: center;
+    padding: 30px 20px;
+    margin-top: 30px;
+    border-top: 2px solid #e0e0e0;
+}
+
+.question-limit-selector h3 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.question-limit-selector p {
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 1.05rem;
+}
+
+.limit-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.limit-btn {
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.limit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.custom-limit {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.custom-limit input {
+    flex: 1;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    text-align: center;
+}
+
+.custom-limit input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.custom-limit .limit-btn {
+    flex: 1;
+}
+
+/* Results Actions */
+.results-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.results-actions .btn {
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .limit-options {
+        max-width: 100%;
+    }
+}
