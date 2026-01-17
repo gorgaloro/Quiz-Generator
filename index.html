@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Interactive Quiz Generator</h1>
+            <p class="subtitle">Upload your CSV file to start studying!</p>
+        </header>
+
+        <!-- Upload Section -->
+        <div id="upload-section" class="section">
+            <div class="upload-area">
+                <div class="upload-icon">📁</div>
+                <h2>Upload Your Quiz CSV</h2>
+                <p>CSV format: question,answer,option1,option2,option3</p>
+                <input type="file" id="csv-file" accept=".csv" />
+                <label for="csv-file" class="upload-btn">Choose File</label>
+                <p class="file-name" id="file-name"></p>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz-section" class="section hidden">
+            <div class="quiz-header">
+                <div class="progress-info">
+                    <span>Question <span id="current-question">1</span> of <span id="total-questions">0</span></span>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+                <div class="score-info">
+                    <span>Score: <span id="score">0</span>/<span id="total-answered">0</span></span>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <h2 id="question-text"></h2>
+                <div id="options-container" class="options-container"></div>
+                <div id="feedback" class="feedback hidden"></div>
+            </div>
+
+            <div class="quiz-controls">
+                <button id="prev-btn" class="btn btn-secondary" disabled>← Previous</button>
+                <button id="next-btn" class="btn btn-primary" disabled>Next →</button>
+                <button id="submit-btn" class="btn btn-success hidden">Submit Answer</button>
+                <button id="restart-btn" class="btn btn-secondary hidden">Restart Quiz</button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="section hidden">
+            <div class="results-card">
+                <h2>🎉 Quiz Complete!</h2>
+                <div class="final-score">
+                    <p>Your Score</p>
+                    <h1><span id="final-score">0</span>/<span id="final-total">0</span></h1>
+                    <p class="percentage" id="percentage">0%</p>
+                </div>
+                <div class="results-breakdown">
+                    <div class="stat">
+                        <span class="stat-label">Correct</span>
+                        <span class="stat-value correct" id="correct-count">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Incorrect</span>
+                        <span class="stat-value incorrect" id="incorrect-count">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Accuracy</span>
+                        <span class="stat-value" id="accuracy">0%</span>
+                    </div>
+                </div>
+                <button id="review-btn" class="btn btn-primary">Review Answers</button>
+                <button id="new-quiz-btn" class="btn btn-secondary">Upload New Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="quiz.js"></script>
+</body>
+</html>
